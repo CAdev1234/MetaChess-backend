@@ -1,0 +1,52 @@
+
+stages:
+  - build
+  - deploy
+
+build:
+  image: node:12.16.0
+  stage: build
+  only:
+    - main
+    - development
+  script:
+    - yarn install
+    - yarn tsc
+
+deploy:development:
+  stage: deploy
+  image: docker:stable
+  environment:
+    name: development
+    url: https://api.metachess.network
+  only: 
+    - development
+  script:
+    - echo "Deploying application..."
+    - apk add --no-cache rsync openssh
+    - mkdir -p ~/.ssh
+    - echo "$SSH_PRIVATE_KEY" >> private.key
+    - chmod 600 private.key
+    - echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
+    - rsync -rav --delete -e "ssh -i private.key" src yarn.lock tsconfig.json package.json $URL:/node/brainiacchess
+    - ssh -i private.key $URL "cd /node/brainiacchess && npm install && npm run tsc && pm2 restart server"
+    - echo "Application successfully deployed."
+
+deploy:production:
+  stage: deploy
+  image: docker:stable
+  environment:
+    name: production
+    url: https://api.metachess.network
+  only: 
+    - main
+  script:
+    - echo "Deploying application..."
+    - apk add --no-cache rsync openssh
+    - mkdir -p ~/.ssh
+    - echo "$SSH_PRIVATE_KEY" >> private.key
+    - chmod 600 private.key
+    - echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
+    - rsync -rav --delete -e "ssh -i private.key" src yarn.lock tsconfig.json package.json $URL:/node/brainiacchess
+    - ssh -i private.key $URL "cd /node/brainiacchess && npm install && npm run tsc && pm2 restart server"
+    - echo "Application successfully deployed."

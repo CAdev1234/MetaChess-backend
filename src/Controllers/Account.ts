@@ -19,6 +19,7 @@ import {
   EmailTemplatePasswordResetRequestReplaceKeysInterface,
   EmailTemplateTypes,
 } from "../Classes/EmailManager";
+import CoinTransactions from "../Classes/CoinTransactions";
 
 export default (
   app: any,
@@ -101,6 +102,7 @@ export default (
       Type,
       CountryId,
       Password,
+      CoinBalance,
       WalletAddress,
     } = req.body;
 
@@ -120,7 +122,6 @@ export default (
 
     // Encrypts password to save in database (Rfc2898DeriveBytes)
     encryptor.Generate(Password, async (saltPassword: string) => {
-      console.log("saltPassword=", saltPassword)
       // Save account to database
       const account = await dataContext.Accounts.create({
         Email,
@@ -132,6 +133,7 @@ export default (
         Privileges: AccountPrivileges.All,
         CreationDate: new Date().getTime(),
         // IsVerified: true,
+        CoinBalance,
         WalletAddress,
       });
 
@@ -219,6 +221,9 @@ export default (
             order: [["Level", "desc"]],
           }))?.Level || 2;
 
+        const sumPendingCoin = await CoinTransactions.SumPendingCoinAmount(account.Id)
+        
+
         return res.status(statusCode.OK).send({
           Id: account.Id,
           Username: account.Username,
@@ -234,7 +239,8 @@ export default (
           Settings: settings || {},
           HighestAIGameLevelWon,
           WalletAddress: account.WalletAddress,
-          Balance: account.Balance
+          CoinBalance: account.CoinBalance,
+          SumPendingCoin: sumPendingCoin
         });
       }
     );
@@ -527,7 +533,8 @@ export default (
       return res.status(statusCode.ServiceUnavailable).send();
 
     const { authorization } = req.headers;
-    const { Fullname, Type, CountryId, WalletAddress, Avatar, Settings } = req.body;
+    const { Fullname, Type, CountryId, WalletAddress, Avatar, Settings } =
+      req.body;
 
     const toUpdate: any = {};
 

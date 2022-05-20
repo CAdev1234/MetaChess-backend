@@ -67,6 +67,9 @@ export enum SocketEvents {
 
     APPSETTINGSCHANGE = 'app-settings-change',
 
+    // Coin Transaction
+    COINTXWITHDRAWSUCCESS = 'coin-transaction-withdraw-success'
+
 
     // // Creating Player
     // REGISTER = 'register',

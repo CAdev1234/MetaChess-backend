@@ -127,7 +127,7 @@ export default (
 
       roomManager.DestroyRoom(room.id, spectators, io, UpdateStatusToFriends);    
       
-    } catch (error) {
+    } catch (error: any) {
       dataContext.Logs.create({
         Message: error.stack,
         Type: LogType.Error,
@@ -194,7 +194,7 @@ export default (
         // }
       });    
       
-    } catch (error) {
+    } catch (error: any) {
       dataContext.Logs.create({
         Message: error.stack,
         Type: LogType.Error,
@@ -308,7 +308,7 @@ export default (
           roomManager.DestroyRoom(room.id, spectators, io, UpdateStatusToFriends);
         }, 1000 * Globals.GameLeaveEndGamePrompt);
       } 
-    } catch (error) {
+    } catch (error: any) {
       dataContext.Logs.create({
         Message: error.stack,
         Type: LogType.Error,
@@ -337,7 +337,7 @@ export default (
 
       treasureHuntManager.DestroyRoom(room.id, UpdateStatusToFriends);
         
-    } catch (error) {
+    } catch (error: any) {
       dataContext.Logs.create({
         Message: error.stack,
         Type: LogType.Error,
@@ -439,7 +439,7 @@ export default (
 
         if (isSessionOverride) delete overrideSessions[socket.id];
         
-      } catch (error) {
+      } catch (error: any) {
         dataContext.Logs.create({
           Message: error.stack,
           Type: LogType.Error,
@@ -596,7 +596,7 @@ export default (
           } else room.SkipTurn();
 
           return callback && callback(stat);
-        } catch (error) {
+        } catch (error: any) {
           dataContext.Logs.create({
             Message: error.stack,
             Type: LogType.Error,
@@ -610,7 +610,7 @@ export default (
     );
 
     socket.on(SocketEvents.CREATECUSTOMGAME,
-      (gameRules: GameRules, callback: Function) => {
+      async (gameRules: GameRules, callback: Function) => {
         try {
           if (
             baseAppSettings.MaintenanceMode == MaintenanceMode.Offline ||
@@ -634,7 +634,7 @@ export default (
 
           gameRules.type = GetGameType(gameRules.time.base);
 
-          const room = roomManager.CreateRoom(
+          const room = await roomManager.CreateRoom(
             socket.id,
             players[socket.id]!.account!,
             RoomType.Custom,
@@ -650,7 +650,7 @@ export default (
           });
 
           return callback && callback(room.id);
-        } catch (error) {
+        } catch (error: any) {
           dataContext.Logs.create({
             Message: error.stack,
             Type: LogType.Error,
@@ -905,7 +905,7 @@ export default (
           //     );
           //   }
           // }
-        } catch (error) {
+        } catch (error: any) {
           dataContext.Logs.create({
             Message: error.stack,
             Type: LogType.Error,
@@ -954,7 +954,7 @@ export default (
             });
           }
 
-        } catch (error) {
+        } catch (error: any) {
           dataContext.Logs.create({
             Message: error.stack,
             Type: LogType.Error,
@@ -1041,7 +1041,7 @@ export default (
         roomManager.DestroyRoom(room.id, spectators, io, UpdateStatusToFriends);
 
         return callback && callback(true);
-      } catch (error) {
+      } catch (error: any) {
         dataContext.Logs.create({
           Message: error.stack,
           Type: LogType.Error,
@@ -1082,7 +1082,7 @@ export default (
           else io.to(room.host).emit(SocketEvents.REQUESTDRAW, null);
 
           return callback && callback(true);
-        } catch (error) {
+        } catch (error: any) {
           dataContext.Logs.create({
             Message: error.stack,
             Type: LogType.Error,
@@ -1173,7 +1173,7 @@ export default (
           }
 
           return callback && callback(true);
-        } catch (error) {
+        } catch (error: any) {
           dataContext.Logs.create({
             Message: error.stack,
             Type: LogType.Error,
@@ -1283,7 +1283,7 @@ export default (
           })
         );
         
-      } catch (error) {
+      } catch (error: any) {
         dataContext.Logs.create({
           Message: error.stack,
           Type: LogType.Error,
@@ -1317,7 +1317,7 @@ export default (
 
         // socket.leave(players[socket.id].spectatingRoomId);
         // players[socket.id].spectatingRoomId = null;
-      } catch (error) {
+      } catch (error: any) {
         dataContext.Logs.create({
           Message: error.stack,
           Type: LogType.Error,
@@ -1374,7 +1374,7 @@ export default (
             });
           // }
         }
-      } catch (error) {
+      } catch (error: any) {
         dataContext.Logs.create({
           Message: error.stack,
           Type: LogType.Error,
@@ -1586,7 +1586,7 @@ export default (
           }
 
           return callback && callback(true);
-        } catch (error) {
+        } catch (error: any) {
           dataContext.Logs.create({
             Message: error.stack,
             Type: LogType.Error,
@@ -1783,7 +1783,7 @@ export default (
           }
 
           return callback && callback(result);
-        } catch (error) {
+        } catch (error: any) {
           dataContext.Logs.create({
             Message: error.stack,
             Type: LogType.Error,
@@ -1821,7 +1821,7 @@ export default (
               rooms,
             })
           );
-        } catch (error) {
+        } catch (error: any) {
           dataContext.Logs.create({
             Message: error.stack,
             Type: LogType.Error,
@@ -1900,7 +1900,7 @@ export default (
           );
 
           return callback && callback(true);
-        } catch (error) {
+        } catch (error: any) {
           dataContext.Logs.create({
             Message: error.stack,
             Type: LogType.Error,
@@ -2028,7 +2028,7 @@ export default (
           );
 
           return callback && callback(true);
-        } catch (error) {
+        } catch (error: any) {
           dataContext.Logs.create({
             Message: error.stack,
             Type: LogType.Error,
@@ -2059,7 +2059,7 @@ export default (
           quickPlayManager.CancelQueue(socket.id);
 
           return callback && callback(true);
-        } catch (error) {
+        } catch (error: any) {
           dataContext.Logs.create({
             Message: error.stack,
             Type: LogType.Error,
@@ -2229,7 +2229,7 @@ export default (
 
           return callback && callback(true);
 
-        } catch (error) {
+        } catch (error: any) {
           dataContext.Logs.create({
             Message: error.stack,
             Type: LogType.Error,
@@ -2279,7 +2279,7 @@ export default (
 
           return callback && callback(resp);
 
-        } catch (error) {
+        } catch (error: any) {
           dataContext.Logs.create({
             Message: error.stack,
             Type: LogType.Error,
@@ -2318,7 +2318,7 @@ export default (
 
         room.LeaveGame(PlayerLeftTreasureHuntCallback);
 
-      } catch (error) {
+      } catch (error: any) {
         dataContext.Logs.create({
           Message: error.stack,
           Type: LogType.Error,
@@ -2437,7 +2437,7 @@ export default (
 
         return callback && callback(aiGameKey);
 
-      } catch (error) {
+      } catch (error: any) {
         dataContext.Logs.create({
           Message: error.stack,
           Type: LogType.Error,
@@ -2466,7 +2466,7 @@ export default (
           })();
         }
 
-      } catch (error) {
+      } catch (error: any) {
         dataContext.Logs.create({
           Message: error.stack,
           Type: LogType.Error,
@@ -2524,7 +2524,7 @@ export default (
 
         return callback && callback(puzzleGameKey);
 
-      } catch (error) {
+      } catch (error: any) {
         dataContext.Logs.create({
           Message: error.stack,
           Type: LogType.Error,
@@ -2553,7 +2553,7 @@ export default (
           })();
         }
 
-      } catch (error) {
+      } catch (error: any) {
         dataContext.Logs.create({
           Message: error.stack,
           Type: LogType.Error,
@@ -2601,7 +2601,7 @@ export default (
 
         return callback && callback(true);
 
-      } catch (error) {
+      } catch (error: any) {
         dataContext.Logs.create({
           Message: error.stack,
           Type: LogType.Error,
@@ -2660,7 +2660,7 @@ export default (
 
         return callback && callback(true);
 
-      } catch (error) {
+      } catch (error: any) {
         dataContext.Logs.create({
           Message: error.stack,
           Type: LogType.Error,
@@ -2704,7 +2704,7 @@ export default (
 
         return callback && callback(true);
 
-      } catch (error) {
+      } catch (error: any) {
         dataContext.Logs.create({
           Message: error.stack,
           Type: LogType.Error,

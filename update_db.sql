@@ -1,3 +1,4 @@
+
 use brainiacchess
 
 select * from Friend
@@ -247,7 +248,38 @@ alter table PuzzleGameHistory add constraint CK_PuzzleGameHistory check (
 
 create table Tournament (
 	Id bigint not null auto_increment primary key,
+    Identifier varchar(32) null,
     AccountId int null,
+    Date bigint not null,
     BeginDate bigint not null,
     EndDate bigint not null,
+    AmountOfPlayers int not null,
+    AccountIds varchar(10000) not null,
+    GameRules varchar(1024),
+    Password nvarchar(32) null
+)
+
+alter table Tournament add constraint FK_Tournament_Account foreign key (AccountId) references Account(Id)
+select * from Tournament
+alter table Tournament add constraint UK_Tournament_Identifier 
+create unique index UX_Tournament_Identifier on Tournament(Identifier)
+
+alter table GameHistory add TournamentId bigint null
+alter table GameHistory add constraint FK_GameHistory_Tournament foreign key (TournamentId) references Tournament(Id)
+
+alter table Account add CoinBalance int not null default(0)
+
+create table CoinTransaction (
+	Id bigint not null auto_increment primary key,
+    AccountId int not null,
+    Amount int not null,
+    Type smallint not null,
+    TxHash varchar(256) null,
+    Description varchar(256) null,
+    CreationDate bigint not null,
+    constraint FK_CoinTransaction_Account foreign key (AccountId) references Account(Id),
+    constraint CK_CoinTransaction check (
+		(((Type = 1 or Type = 2) and TxHash is not null) or (Type <> 1 and Type <> 2 and TxHash is null)) and
+        (((Type = 2 or Type = 3) and Amount < 0) or (Type <> 2 and Type <> 3 and Amount > 0))
+    )
 )

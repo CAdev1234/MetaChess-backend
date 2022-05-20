@@ -43,7 +43,7 @@ export class QuickPlayManager {
 
     }
 
-    AddToQueue(user: string, account: Account, gameRules: GameRules, startGameCallback: (room: Room) => void) {
+    async AddToQueue(user: string, account: Account, gameRules: GameRules, startGameCallback: (room: Room) => void) {
 
         (async () => {
 
@@ -58,7 +58,7 @@ export class QuickPlayManager {
 
                     if (playerElo >= queueItem.rating.minium && playerElo <= queueItem.rating.maxium && gameRules.mode == queueItem.gameRules.mode && this.Players[queueItem.socketId] && !roomId) {
 
-                        const room = this.RoomManager.CreateRoom(queueItem.socketId, this.Players[queueItem.socketId]!.account!, RoomType.Queue, gameRules, this.DataContext);
+                        const room = await this.RoomManager.CreateRoom(queueItem.socketId, this.Players[queueItem.socketId]!.account!, RoomType.Queue, gameRules, this.DataContext);
                         
                         this.RoomManager.JoinRoom(user, this.Players[user]!.account!, room.id)!;
 
@@ -94,7 +94,7 @@ export class QuickPlayManager {
                             gameRules.time = {...baseTime};
                         }
 
-                        const room = this.RoomManager.CreateRoom(queueItem.socketId, this.Players[queueItem.socketId]!.account!, RoomType.Queue, gameRules, this.DataContext);
+                        const room = await this.RoomManager.CreateRoom(queueItem.socketId, this.Players[queueItem.socketId]!.account!, RoomType.Queue, gameRules, this.DataContext);
                         
                         this.RoomManager.JoinRoom(user, this.Players[user]!.account!, room.id)!;
 

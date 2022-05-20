@@ -375,9 +375,9 @@ export class RoomManager {
         };
         this.RoomsCount = 0;
     }
-    CreateRoom(user: string, account: Account, roomType: RoomType, gameRules: GameRules, dataContext: any) {
+    async CreateRoom(user: string, account: Account, roomType: RoomType, gameRules: GameRules, dataContext: any) {
         var roomId = encryptor.RandomString(32, {symbols: false});
-        while (this.Rooms[roomId] != null && dataContext.GameHistories.findOne({where: {Identifier: roomId}}) == null) {
+        while (this.Rooms[roomId] != null && await dataContext.GameHistories.findOne({where: {Identifier: roomId}}) == null) {
             roomId = encryptor.RandomString(32, {symbols: false});
         }
         this.Rooms[roomId] = new Room(roomId, user, roomType, gameRules, account);

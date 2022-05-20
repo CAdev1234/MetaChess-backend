@@ -24,28 +24,28 @@ export interface TournamentRules {
 
 export class Tournament {
     id: string
+    dbId: number;
     host: string
     hostAccount: Account;
     tournamentRules: TournamentRules;
     rooms: string[];
-    players: string[];
+    // players: string[];
     hasStarted: boolean;
     hasEnded: boolean;
     registeredPlayers: Account[];
-    password?: string;
 
-    constructor(id: string, host: string, tournamentRules: TournamentRules, account: Account, password?: string)
+    constructor(id: string, host: string, tournamentRules: TournamentRules, account: Account)
     {
         this.id = id;
+        this.dbId = 0;
         this.host = host;
         this.hostAccount = account;
         this.tournamentRules = tournamentRules;
         this.rooms = [];
-        this.players = [];
-        this.registeredPlayers = [];
+        // this.players = [host];
+        this.registeredPlayers = [account];
         this.hasStarted = false;
         this.hasEnded = false;
-        this.password = password;
     }
     
 }
@@ -61,45 +61,79 @@ export class TournamentManager {
         // this.UserTournamentIds = {};
         this.TournamentsCount = 0;
     }
-    CreateTournament(user: string, account: Account, tournamentRules: TournamentRules, dataContext: any) {
+    async CreateTournament(user: string, account: Account, tournamentRules: TournamentRules, dataContext: any) {
         var tournamentId = encryptor.RandomString(32, {symbols: false});
-        // while (this.Tournaments[tournamentId] != null && dataContext.GameHistories.findOne({where: {Identifier: tournamentId}}) == null) {
-        //     tournamentId = encryptor.RandomString(32, {symbols: false});
-        // }
-        this.Tournaments[tournamentId] = new Tournament(tournamentId, user, tournamentRules, account);
+        while (this.Tournaments[tournamentId] != null && await dataContext.Tournaments.findOne({where: {Identifier: tournamentId}}) == null) {
+            tournamentId = encryptor.RandomString(32, {symbols: false});
+        }
+        const tourn = new Tournament(tournamentId, user, tournamentRules, account);
+        
+        const tournament = await dataContext.Tournaments.create({
+            Identifier: tournamentId,
+            AccountId: account.Id,
+            Date: new Date().getTime(),
+            BeginDate: tournamentRules.startDate.getTime(),
+            EndDate: tournamentRules.endDate.getTime(),
+            AmountOfPlayers: tournamentRules.amountOfPlayers,
+            AccountIds: JSON.stringify(tourn.registeredPlayers.map(e => e.Id)),
+            GameRules: JSON.stringify(tournamentRules.gameRules),
+            Password: tournamentRules.password
+        });
+
+        tourn.dbId = tournament.Id;
+        this.Tournaments[tournamentId] = tourn;
         this.TournamentsCount++;
+
+        // TODO: Timer to start
 
         return this.Tournaments[tournamentId];
 
     }
 
-    LeaveTournament(user: string, tournamentId: string, players: Record<string, Player>):any {
+    async LeaveTournament(user: string, tournamentId: string, players: Record<string, Player>, dataContext: any) {
 
-        const key = GetAccountKey(players[user].account!);
+        const tournament = this.Tournaments[tournamentId];
+
+        if (!tournament || tournament.hasStarted) return;
+
+        const player = players[user].account!;
+        const isHost = players[user].account?.Id == tournament.hostAccount.Id;
+
+        const playerInd = tournament.registeredPlayers.findIndex(e => e.Id == player.Id);
+        if (playerInd == -1) return;
         
-        if (!key) return;
-            
-        // (async () => {
-        //     const timeKey = `${this.Rooms[roomId].gameRules.time.base}+${this.Rooms[roomId].gameRules.time.increment}`;
-        //     const ind = this.OpenRoomsByTime[timeKey].findIndex(e => e.roomId == roomId);
-        //     this.OpenRoomsByTime[timeKey].splice(ind, 1);
+        tournament.registeredPlayers.splice(playerInd, 1);
 
-        //     const gameType = this.Rooms[roomId].gameRules.type;
-        //     const ind2 = this.OpenRoomsByType[gameType].findIndex(e => e.roomId == roomId);
-        //     this.OpenRoomsByType[gameType].splice(ind2, 1);
-        // })();
-        
-        // delete this.Rooms[roomId];
-        // this.RoomsCount--;
+        const dbTournament = await dataContext.Tournaments.findOne({ where: { Id: tournament.dbId }});
 
+        if (isHost) {
+            await dbTournament.destroy();
+        }
+        else {
+            await dbTournament.update({
+                AccountIds: JSON.stringify(tournament.registeredPlayers.map(e => e.Id))
+            });
+        }
     }
+    // TODO: stop accepting people, tournament name, duration, TIME IN UTC, min duration is 45 min, cancel tournament if not 5 people
+    async JoinTournament(user: string, account: Account, tournamentId: string, dataContext: any){
+        // TODO: Limit players (min: 5, max: 500)
+        const tournament = this.Tournaments[tournamentId];
 
-    JoinTournament(user: string, account: Account, tournamentId: string){
+        if (!tournament || tournament.hasStarted) return;
 
-        if (!this.Tournaments[tournamentId] || this.Tournaments[tournamentId].hasStarted) return;
+        const alreadyIn = tournament.registeredPlayers.some(e => e.Id == account.Id);
 
-        this.Tournaments[tournamentId].players.push(user);
+        if (alreadyIn) return;
+
+        // this.Tournaments[tournamentId].players.push(user);
         this.Tournaments[tournamentId].registeredPlayers.push(account);
+        
+        const dbTournament = await dataContext.Tournaments.findOne({ where: { Id: tournament.dbId }});
+
+        await dbTournament.update({
+            AccountIds: JSON.stringify(tournament.registeredPlayers.map(e => e.Id))
+        });
 
         return this.Tournaments[tournamentId];
     }
@@ -111,12 +145,12 @@ export class TournamentManager {
         
     }
 
-    GameEnded(roomId: string) {
+    TournamentEnded(roomId: string) {
         const tournament = this.Tournaments[roomId];
         tournament.hasEnded = true;
     }
 
-    GameStarted(tournamentId: string){
+    TournamentStarted(tournamentId: string){
         
         const tournament = this.Tournaments[tournamentId];
 

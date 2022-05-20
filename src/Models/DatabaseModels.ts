@@ -1,10 +1,9 @@
 
 import {Sequelize, DataTypes, Model} from 'sequelize';
 
-// password: F!f34PPUA*cT8XdY28$pW7zvVF^5LNJS4!QRaww3Yu5TstpWD4wy7xy65jLSjtha
 const sequelize = new Sequelize('brainiacchess', 'root', '', {
     dialect: 'mysql',
-    // logging: false
+    logging: false
 })
 
 class Account extends Model {
@@ -17,6 +16,11 @@ Account.init({
         type: DataTypes.INTEGER,
         primaryKey: true,
         autoIncrement: true,
+        allowNull: false
+    },
+    CoinBalance: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0,
         allowNull: false
     },
     IsBanned: {
@@ -125,11 +129,6 @@ Account.init({
         type: DataTypes.TEXT,
         allowNull: true
     },
-    Balance: {
-        type: DataTypes.INTEGER,
-        defaultValue: 0,
-        allowNull: false
-    }
 }, {
     tableName: "Account",
     sequelize,
@@ -341,6 +340,10 @@ GameHistory.init({
     GameEndDate: {
         type: DataTypes.BIGINT,
         allowNull: false
+    },
+    TournamentId: {
+        type: DataTypes.BIGINT,
+        allowNull: true
     }
 }, {
     tableName: "GameHistory",
@@ -971,6 +974,108 @@ EmailTemplate.init({
     timestamps: false
 });
 
+class Tournament extends Model {
+    
+}
+
+Tournament.init({
+    Id: {
+        type: DataTypes.BIGINT,
+        primaryKey: true,
+        autoIncrement: true,
+        allowNull: false
+    },
+    Identifier: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+    AccountId: {
+        type: DataTypes.INTEGER,
+        allowNull: false
+    },
+    Date: {
+        type: DataTypes.BIGINT,
+        allowNull: false
+    },
+    BeginDate: {
+        type: DataTypes.BIGINT,
+        allowNull: false
+    },
+    EndDate: {
+        type: DataTypes.BIGINT,
+        allowNull: false
+    },
+    AmountOfPlayers: {
+        type: DataTypes.INTEGER,
+        allowNull: false
+    },
+    AccountIds: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+    GameRules: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+    Password: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+}, {
+    tableName: "Tournament",
+    sequelize,
+    timestamps: false
+});
+
+
+class CoinTransaction extends Model {
+    
+}
+
+CoinTransaction.init({
+    Id: {
+        type: DataTypes.BIGINT,
+        primaryKey: true,
+        autoIncrement: true,
+        allowNull: false
+    },
+    AccountId: {
+        type: DataTypes.INTEGER,
+        allowNull: false
+    },
+    Amount: {
+        type: DataTypes.INTEGER,
+        allowNull: false
+    },
+    Type: {
+        type: DataTypes.TINYINT,
+        allowNull: false
+    },
+    TxHash: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    Description: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    WalletAddress: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    RunCount: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0
+    },
+    CreationDate: {
+        type: DataTypes.BIGINT,
+        allowNull: false
+    },
+}, {
+    tableName: "CoinTransaction",
+    sequelize,
+    timestamps: false
+});
 
 
 Account.belongsToMany(Account, {
@@ -1053,6 +1158,9 @@ GameHistory.belongsTo(Guest, {as: 'Guest', foreignKey: 'GuestId'});
 GameHistory.belongsTo(Account, {as: 'Opponent', foreignKey: 'OpponentId'});
 GameHistory.belongsTo(Guest, {as: 'OpponentGuest', foreignKey: 'OpponentGuestId'});
 
+GameHistory.belongsTo(Tournament, {as: 'Tournament', foreignKey: 'TournamentId'});
+Tournament.hasMany(GameHistory, {as: 'GameHistories', foreignKey: 'TournamentId'});
+
 LinkCode.belongsTo(Account, {as: 'Account', foreignKey: 'AccountId'});
 
 PuzzleGameHistory.belongsTo(Puzzle, {as: 'Puzzle', foreignKey: 'PuzzleId'});
@@ -1063,6 +1171,10 @@ Message.belongsTo(Account, {as: 'Account', foreignKey: 'AccountId'});
 Message.belongsTo(Account, {as: 'TargetAccount', foreignKey: 'TargetAccountId'});
 
 TreasureHunting.belongsTo(Account, {as: 'Account', foreignKey: 'AccountId'});
+
+
+CoinTransaction.belongsTo(Account, {as: 'Account', foreignKey: 'AccountId'});
+Account.hasMany(CoinTransaction, {as: 'CoinTransactions', foreignKey: 'AccountId'});
 
 // Account.belongsToMany(Account, {
 //     as: 'Messages',
@@ -1103,7 +1215,7 @@ sequelize.authenticate();
 
 // }
 
-export default {
+const dataContext = {
     Database: sequelize,
     LinkCodes: LinkCode,
     Accounts: Account,
@@ -1122,8 +1234,12 @@ export default {
     TreasureHuntings: TreasureHunting,
     BaseAppSettings,
     AIGameHistories: AIGameHistory,
-    EmailTemplates: EmailTemplate
+    EmailTemplates: EmailTemplate,
+    Tournaments: Tournament,
+    CoinTransactions: CoinTransaction
 }
+
+export default dataContext;
 
 // Check if database connection is valid
 // sequelize.authenticate().then(function(errors: any) {

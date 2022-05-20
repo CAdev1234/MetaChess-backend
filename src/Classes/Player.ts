@@ -13,7 +13,7 @@ export interface Account {
     BulletElo: number;
     Avatar?: string;
     WalletAddress?: string;
-    Balance?: number;
+    CoinBalance?: number;
 
     // BestClassicalElo: number;
     // BestBlitzElo: number;
@@ -26,9 +26,6 @@ export interface Account {
     BulletEloSubsequentlyOver2400: boolean;
     PlayedGames: number;
     TreasureHuntTodayGames?: number;
-    
-
-
 }
 
 export class Player {

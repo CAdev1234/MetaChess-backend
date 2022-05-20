@@ -6,6 +6,9 @@ var cors = require("cors");
 var bodyParser = require("body-parser");
 var cookieParser = require("cookie-parser");
 const helmet = require("helmet");
+require("dotenv").config()
+
+
 
 import { RoomManager } from "./Classes/RoomManager";
 import { EmailManager } from "./Classes/EmailManager";
@@ -22,6 +25,7 @@ import EmailTemplatesController from "./Controllers/EmailTemplates";
 import AIGameController from "./Controllers/AIGame";
 import PuzzleGameController from "./Controllers/Puzzle";
 import NetworkHandler from "./NetworkHandler";
+import CoinTransactionController from "./Controllers/CoinTransaction";
 
 import dataContext from "./Models/DatabaseModels";
 import { StatusCode } from "./Enums/StatusCode";
@@ -30,10 +34,12 @@ import { LogCategory } from "./Enums/LogCategory";
 import { QuickPlayManager } from "./Classes/QuickPlayManager";
 import Leaderboard from "./Controllers/Leaderboard";
 import { TreasureHuntManager } from "./Classes/TreasureHuntManager";
+import { initContractEventListener } from "./ContractEventHandler";
 
 var io = require("socket.io")(process.env.PORT || 44307);
 io.eio.pingTimeout = 600000; // 2 minutes
 io.eio.pingInterval = 5000;  // 5 seconds
+
 
 var app = express();
 
@@ -96,7 +102,7 @@ var emailManager = new EmailManager(dataContext);
   AIGameController(app, aiGames, userAiGames, baseAppSettings, dataContext);
   PuzzleGameController(app, puzzleGames, userPuzzleGames, baseAppSettings, dataContext);
   NetworkHandler(dataContext, players, playersIds, aiGames, userAiGames, puzzleGames, userPuzzleGames, spectators, roomManager, quickPlayManager, treasureHuntManager, baseAppSettings, io);
-
+  CoinTransactionController(app, baseAppSettings, dataContext);
 })();
   
 app.use(function (err: any, req: any, res: any, next: any) {
@@ -110,6 +116,9 @@ app.use(function (err: any, req: any, res: any, next: any) {
   return res.status(StatusCode.InternalServerError).send();
 });
 
-http.listen(44308, function () {
+initContractEventListener(io)
+
+http.listen(44308, () => {
   console.log("listening on *:44308");
 });
+
